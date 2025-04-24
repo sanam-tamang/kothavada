@@ -58,6 +58,12 @@ class _MapScreenState extends State<MapScreen>
       // Initialize map controller
       _mapController = MapController();
 
+      // Add listener to search controller to update UI when text changes
+      _searchController.addListener(() {
+        // Force rebuild to show/hide clear button
+        if (mounted) setState(() {});
+      });
+
       // Delay location tracking until the map is fully rendered
       WidgetsBinding.instance.addPostFrameCallback((_) {
         // Wait a bit more to ensure map is fully initialized
