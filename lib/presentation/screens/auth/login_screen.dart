@@ -4,7 +4,6 @@ import 'package:kothavada/core/constants/app_constants.dart';
 import 'package:kothavada/core/constants/app_theme.dart';
 import 'package:kothavada/presentation/cubits/user/user_cubit.dart';
 import 'package:kothavada/presentation/cubits/user/user_state.dart';
-import 'package:kothavada/presentation/screens/auth/forgot_password_screen.dart';
 import 'package:kothavada/presentation/screens/auth/register_screen.dart';
 import 'package:kothavada/presentation/screens/home/home_screen.dart';
 import 'package:kothavada/presentation/widgets/custom_button.dart';
@@ -25,10 +24,7 @@ class _LoginScreenState extends State<LoginScreen>
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
-  final bool _rememberMe = false;
   late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
@@ -36,17 +32,6 @@ class _LoginScreenState extends State<LoginScreen>
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
-    );
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.2),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
 
     _animationController.forward();

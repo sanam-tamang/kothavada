@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kothavada/core/constants/app_constants.dart';
 import 'package:kothavada/core/constants/app_theme.dart';
 import 'package:kothavada/presentation/cubits/notification/notification_cubit.dart';
 import 'package:kothavada/presentation/cubits/notification/notification_state.dart';
@@ -21,14 +20,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
-  final List<Widget> _screens = [
-    const MapScreen(),
-    const MyRoomsScreen(),
-    const NotificationsScreen(),
-    const ProfileScreen(),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -60,26 +51,103 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(AppConstants.appName),
-          actions: [
-            BlocBuilder<NotificationCubit, NotificationState>(
-              builder: (context, state) {
-                final unreadCount = state.unreadCount;
-                return Stack(
+        // No app bar to maximize map space
+        body: Stack(
+          children: [
+            // Map screen takes the full space
+            const MapScreen(),
+
+            // Navigation menu button (top-right)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 10,
+              right: 16,
+              child: BlocBuilder<NotificationCubit, NotificationState>(
+                builder: (context, state) {
+                  final unreadCount = state.unreadCount;
+                  return FloatingActionButton.small(
+                    heroTag: 'menuButton',
+                    backgroundColor: Colors.white,
+                    elevation: 4,
+                    onPressed: () {
+                      _showNavigationMenu(context, unreadCount);
+                    },
+                    child: const Icon(Icons.menu, color: AppTheme.primaryColor),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Show a modal bottom sheet with navigation options
+  void _showNavigationMenu(BuildContext context, int unreadCount) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 10,
+                offset: Offset(0, -2),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle indicator
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+
+              // Navigation options
+              ListTile(
+                leading: const Icon(Icons.map, color: AppTheme.primaryColor),
+                title: const Text('Map'),
+                subtitle: const Text('Find rooms near you'),
+                onTap: () {
+                  Navigator.pop(context); // Close the menu
+                },
+              ),
+
+              ListTile(
+                leading: const Icon(Icons.home, color: AppTheme.accentColor),
+                title: const Text('My Rooms'),
+                subtitle: const Text('Manage your listings'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MyRoomsScreen()),
+                  );
+                },
+              ),
+
+              ListTile(
+                leading: Stack(
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.notifications),
-                      onPressed: () {
-                        setState(() {
-                          _currentIndex = 2; // Navigate to notifications tab
-                        });
-                      },
+                    const Icon(
+                      Icons.notifications,
+                      color: AppTheme.accentColor,
                     ),
                     if (unreadCount > 0)
                       Positioned(
-                        right: 8,
-                        top: 8,
+                        right: 0,
+                        top: 0,
                         child: Container(
                           padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
@@ -87,48 +155,52 @@ class _HomeScreenState extends State<HomeScreen> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           constraints: const BoxConstraints(
-                            minWidth: 16,
-                            minHeight: 16,
+                            minWidth: 14,
+                            minHeight: 14,
                           ),
                           child: Text(
                             unreadCount > 9 ? '9+' : '$unreadCount',
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 10,
+                              fontSize: 8,
                             ),
                             textAlign: TextAlign.center,
                           ),
                         ),
                       ),
                   ],
-                );
-              },
-            ),
-          ],
-        ),
-        body: IndexedStack(index: _currentIndex, children: _screens),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: AppTheme.primaryColor,
-          unselectedItemColor: AppTheme.secondaryTextColor,
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'My Rooms'),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.notifications),
-              label: 'Notifications',
-            ),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-          ],
-        ),
-      ),
+                ),
+                title: const Text('Notifications'),
+                subtitle: const Text('View your alerts'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationsScreen(),
+                    ),
+                  );
+                },
+              ),
+
+              ListTile(
+                leading: const Icon(Icons.person, color: AppTheme.accentColor),
+                title: const Text('Profile'),
+                subtitle: const Text('Manage your account'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
     );
   }
 }

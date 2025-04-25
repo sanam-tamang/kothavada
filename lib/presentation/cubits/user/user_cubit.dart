@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kothavada/data/models/user_model.dart';
 import 'package:kothavada/data/repositories/auth_repository.dart';
 import 'package:kothavada/presentation/cubits/user/user_state.dart';
 

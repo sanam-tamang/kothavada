@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -11,6 +10,9 @@ import 'package:kothavada/core/utils/animation_utils.dart';
 import 'package:kothavada/data/models/room_model.dart';
 import 'package:kothavada/presentation/cubits/room/room_cubit.dart';
 import 'package:kothavada/presentation/cubits/room/room_state.dart';
+import 'package:kothavada/presentation/cubits/user/user_cubit.dart';
+import 'package:kothavada/presentation/cubits/user/user_state.dart';
+import 'package:kothavada/presentation/screens/room/add_room_screen.dart';
 import 'package:kothavada/presentation/screens/room/room_detail_screen.dart';
 import 'package:kothavada/presentation/widgets/animated_widgets.dart';
 
@@ -807,11 +809,11 @@ class _MapScreenState extends State<MapScreen>
                     ],
                   ),
 
-              // Search and radius control card
+              // Compact search bar
               Positioned(
                 top: MediaQuery.of(context).padding.top + 16,
                 left: 16,
-                right: 16,
+                right: 70, // Leave space for the menu button
                 child: AnimationUtils.fadeSlide(
                   duration: AnimationUtils.medium,
                   slideBegin: const Offset(0, -0.5),
@@ -819,173 +821,45 @@ class _MapScreenState extends State<MapScreen>
                     elevation: 4,
                     shadowColor: AppTheme.shadowColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(30),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
+                    child: Container(
+                      height: 50,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Row(
                         children: [
-                          // Location search bar
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: _searchController,
-                                  decoration: InputDecoration(
-                                    hintText: 'Search for a location...',
-                                    prefixIcon: const Icon(
-                                      Icons.search,
-                                      color: AppTheme.accentColor,
-                                    ),
-                                    suffixIcon:
-                                        _searchController.text.isNotEmpty
-                                            ? IconButton(
-                                              icon: const Icon(
-                                                Icons.clear,
-                                                color: AppTheme.accentColor,
-                                              ),
-                                              onPressed: _clearSearch,
-                                            )
-                                            : null,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(
-                                        color: AppTheme.dividerColor,
-                                      ),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(
-                                        color: AppTheme.dividerColor,
-                                      ),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(
-                                        color: AppTheme.accentColor,
-                                      ),
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                      horizontal: 16,
-                                    ),
-                                    isDense: true,
-                                  ),
-                                  onSubmitted: _searchLocation,
-                                ),
-                              ),
-                              if (_searchedLocation != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 8),
-                                  child: IconButton(
-                                    icon: const Icon(
-                                      Icons.my_location,
-                                      color: AppTheme.primaryColor,
-                                    ),
-                                    tooltip: 'Return to current location',
-                                    onPressed: _clearSearch,
-                                  ),
-                                ),
-                            ],
+                          const SizedBox(width: 8),
+                          const Icon(
+                            Icons.search,
+                            color: AppTheme.accentColor,
+                            size: 20,
                           ),
-
-                          // Error message if search fails
-                          if (_searchError.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Text(
-                                _searchError,
-                                style: TextStyle(
-                                  color: AppTheme.errorColor,
-                                  fontSize: 12,
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              decoration: const InputDecoration(
+                                hintText: 'Search for a location...',
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: 15,
                                 ),
+                                isDense: true,
                               ),
-                            ),
-
-                          const SizedBox(height: 16),
-
-                          // Radius control
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.radar,
-                                    color: AppTheme.accentColor,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Search Radius: ${_searchRadius.toStringAsFixed(1)} km',
-                                    style: AppTheme.subheadingStyle.copyWith(
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.accentColor,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  '${state.rooms.length} rooms',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          SliderTheme(
-                            data: SliderTheme.of(context).copyWith(
-                              trackHeight: 4,
-                              thumbShape: const RoundSliderThumbShape(
-                                enabledThumbRadius: 8,
-                              ),
-                              overlayShape: const RoundSliderOverlayShape(
-                                overlayRadius: 16,
-                              ),
-                              activeTrackColor: AppTheme.accentColor,
-                              inactiveTrackColor: AppTheme.dividerColor,
-                              thumbColor: AppTheme.accentColor,
-                              overlayColor: AppTheme.accentColor.withAlpha(30),
-                            ),
-                            child: Slider(
-                              value: _searchRadius,
-                              min: 1,
-                              max: 20,
-                              divisions: 19,
-                              label: '${_searchRadius.toStringAsFixed(1)} km',
-                              onChanged: _onRadiusChanged,
+                              onSubmitted: _searchLocation,
                             ),
                           ),
-
-                          // Show loading indicator when searching
-                          if (_isSearching)
-                            const Center(
-                              child: Padding(
-                                padding: EdgeInsets.only(top: 8),
-                                child: SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      AppTheme.accentColor,
-                                    ),
-                                  ),
-                                ),
+                          if (_searchController.text.isNotEmpty)
+                            IconButton(
+                              icon: const Icon(
+                                Icons.clear,
+                                color: AppTheme.accentColor,
+                                size: 20,
+                              ),
+                              onPressed: _clearSearch,
+                              constraints: const BoxConstraints(
+                                minWidth: 40,
+                                minHeight: 40,
                               ),
                             ),
                         ],
@@ -995,7 +869,188 @@ class _MapScreenState extends State<MapScreen>
                 ),
               ),
 
-              // Location controls
+              // Radius control pill
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 76,
+                left: 16,
+                child: AnimationUtils.fadeSlide(
+                  duration: AnimationUtils.medium,
+                  slideBegin: const Offset(-0.5, 0),
+                  child: Card(
+                    elevation: 4,
+                    shadowColor: AppTheme.shadowColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.radar,
+                            color: AppTheme.accentColor,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${_searchRadius.toStringAsFixed(1)} km',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            width: 100,
+                            child: SliderTheme(
+                              data: SliderTheme.of(context).copyWith(
+                                trackHeight: 2,
+                                thumbShape: const RoundSliderThumbShape(
+                                  enabledThumbRadius: 6,
+                                ),
+                                overlayShape: const RoundSliderOverlayShape(
+                                  overlayRadius: 12,
+                                ),
+                                activeTrackColor: AppTheme.accentColor,
+                                inactiveTrackColor: AppTheme.dividerColor,
+                                thumbColor: AppTheme.accentColor,
+                                overlayColor: AppTheme.accentColor.withAlpha(
+                                  30,
+                                ),
+                              ),
+                              child: Slider(
+                                value: _searchRadius,
+                                min: 1,
+                                max: 20,
+                                divisions: 19,
+                                onChanged: _onRadiusChanged,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Room count pill
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 76,
+                right: 16,
+                child: AnimationUtils.fadeSlide(
+                  duration: AnimationUtils.medium,
+                  slideBegin: const Offset(0.5, 0),
+                  child: Card(
+                    elevation: 4,
+                    color: AppTheme.accentColor,
+                    shadowColor: AppTheme.shadowColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.home, color: Colors.white, size: 16),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${state.rooms.length} rooms',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Error message if search fails
+              if (_searchError.isNotEmpty)
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 130,
+                  left: 16,
+                  right: 16,
+                  child: Card(
+                    elevation: 4,
+                    color: AppTheme.errorColor.withAlpha(230),
+                    shadowColor: AppTheme.shadowColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Text(
+                        _searchError,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Loading indicator when searching
+              if (_isSearching)
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 76,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Card(
+                      elevation: 4,
+                      shadowColor: AppTheme.shadowColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppTheme.accentColor,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Searching...',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Location controls - floating action button with speed dial
               Positioned(
                 bottom: 16,
                 right: 16,
@@ -1005,30 +1060,59 @@ class _MapScreenState extends State<MapScreen>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Add Room button
+                      if (context.read<UserCubit>().state.status ==
+                          UserStatus.authenticated)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: FloatingActionButton.small(
+                            heroTag: 'addRoom',
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const AddRoomScreen(),
+                                ),
+                              );
+                            },
+                            backgroundColor: Colors.white,
+                            foregroundColor: AppTheme.accentColor,
+                            elevation: 4,
+                            child: const Icon(Icons.add_home),
+                          ),
+                        ),
+
                       // Toggle location tracking
-                      FloatingActionButton.small(
-                        heroTag: 'toggleTracking',
-                        onPressed: () {
-                          if (_isLocationTracking) {
-                            _stopLocationTracking();
-                          } else {
-                            _startLocationTracking();
-                          }
-                        },
-                        backgroundColor:
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: FloatingActionButton.small(
+                          heroTag: 'toggleTracking',
+                          onPressed: () {
+                            if (_isLocationTracking) {
+                              _stopLocationTracking();
+                            } else {
+                              _startLocationTracking();
+                            }
+                          },
+                          backgroundColor:
+                              _isLocationTracking
+                                  ? AppTheme.accentColor
+                                  : Colors.white,
+                          foregroundColor:
+                              _isLocationTracking
+                                  ? Colors.white
+                                  : AppTheme.primaryColor,
+                          elevation: 4,
+                          child: Icon(
                             _isLocationTracking
-                                ? AppTheme.accentColor
-                                : AppTheme.primaryColor,
-                        elevation: 4,
-                        child: Icon(
-                          _isLocationTracking
-                              ? Icons.location_on
-                              : Icons.location_searching,
-                          size: 20,
+                                ? Icons.location_on
+                                : Icons.location_searching,
+                            size: 20,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      // Get current location
+
+                      // Main FAB - Get current location
                       FloatingActionButton(
                         heroTag: 'getCurrentLocation',
                         onPressed: _getCurrentLocation,

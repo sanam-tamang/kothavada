@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kothavada/core/constants/app_constants.dart';
 import 'package:kothavada/core/constants/app_theme.dart';
-import 'package:kothavada/presentation/cubits/user/user_cubit.dart';
-import 'package:kothavada/presentation/cubits/user/user_state.dart';
 import 'package:kothavada/presentation/screens/auth/login_screen_new.dart';
 import 'package:kothavada/presentation/screens/auth/register_screen_new.dart';
-import 'package:kothavada/presentation/screens/home/home_screen.dart';
 
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
